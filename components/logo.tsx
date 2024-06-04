@@ -8,7 +8,7 @@ const textFont = Poppins({
   weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
 });
 
-const logo = () => {
+const Logo = () => {
   return (
     <Link href="/">
       <div className="hover:opacity-75 transition items-center gap-x-2 hidden md:flex">
@@ -21,4 +21,4 @@ const logo = () => {
   );
 };
 
-export default logo;
+export default Logo;
