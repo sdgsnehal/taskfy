@@ -1,9 +1,5 @@
 "use client";
 import { createBoard } from "@/actions/create-board";
-import { Button } from "@/components/ui/button";
-import { error } from "console";
-import { Divide } from "lucide-react";
-import { useFormState } from "react-dom";
 import FormInput from "./form-input";
 import FormButton from "./form-button";
 import { useAction } from "@/hooks/use-action";
