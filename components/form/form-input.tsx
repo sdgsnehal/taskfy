@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { useFormState, useFormStatus } from "react-dom";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { FormErrors } from "./form-errors";
 
 interface FormInputProps {
   id: string;
@@ -44,7 +45,7 @@ export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
               htmlFor={id}
               className="text-xs font-semibold text-neutral-700"
             >
-              label
+              {label}
             </Label>
           ) : null}
           <Input
