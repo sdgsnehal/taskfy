@@ -15,6 +15,7 @@ import { X } from "lucide-react";
 import { error } from "console";
 import { FormPicker } from "./form-picker";
 import { ElementRef, useRef } from "react";
+import { useRouter } from "next/navigation";
 interface FormPopOverProps {
   children: React.ReactNode;
   side?: "left" | "right" | "top" | "bottom";
@@ -27,11 +28,13 @@ export const FormPopOver = ({
   sideOffset = 0,
   align,
 }: FormPopOverProps) => {
+  const router = useRouter();
   const closeRef = useRef<ElementRef<"button">>(null);
   const { execute, fieldErrors } = useAction(createBoard, {
     onSuccess: (data) => {
       toast.success("Board created");
       closeRef.current?.click();
+      router.push(`/board/${data.id}`);
     },
     onError: (error) => {
       toast.error(error);
