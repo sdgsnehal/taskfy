@@ -5,6 +5,8 @@ import { forwardRef, KeyboardEventHandler } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { FormErrors } from "./form-errors";
+import { useFormStatus } from "react-dom";
 
 interface FormTextareaProps {
   id: string;
@@ -36,6 +38,7 @@ export const FormTextarea = forwardRef<HTMLTextAreaElement, FormTextareaProps>(
     },
     ref
   ) => {
+    const { pending } = useFormStatus();
     return (
       <div className="space-y-2 w-full">
         <div className="space-y-1 w-full">
@@ -56,9 +59,16 @@ export const FormTextarea = forwardRef<HTMLTextAreaElement, FormTextareaProps>(
             placeholder={placeholder}
             name={id}
             id={id}
-            className={cn}
+            disabled={pending || disabled}
+            className={cn(
+              "resize-none focus-visible:ring-0 focus-visible:ring-offset-0 ring-0 focus:ring-0 outline-none shadow-sm",
+              className
+            )}
+            aria-describedby={`${id}-error`}
+            defaultValue={defaultValue}
           />
         </div>
+        <FormErrors id={id} errors={errors} />
       </div>
     );
   }
