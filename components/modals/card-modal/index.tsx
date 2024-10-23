@@ -16,8 +16,9 @@ export const CardModal = () => {
   });
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <Header data={cardData} />
-      <DialogContent>{cardData?.title}</DialogContent>
+      <DialogContent>
+        {!cardData ? <Header.Skeleton /> : <Header data={cardData} />}
+      </DialogContent>
     </Dialog>
   );
 };
