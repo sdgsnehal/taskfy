@@ -5,7 +5,7 @@ import { InputType, ReturnType } from "./types";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { createSafeAction } from "@/lib/create-safe-action";
-import { UpdateBoard } from "./schema";
+import { DeleteList } from "./schema";
 import { createAuditlog } from "@/lib/create-audit-log";
 import { ACTION, ENTITY_TYPE } from "@prisma/client";
 const handler = async (data: InputType): Promise<ReturnType> => {
@@ -15,30 +15,31 @@ const handler = async (data: InputType): Promise<ReturnType> => {
       error: "Unauthorized",
     };
   }
-  const { title, id } = data;
-  let board;
+  const { id, boardId } = data;
+  let list;
+
   try {
-    board = await db.board.update({
+    list = await db.list.delete({
       where: {
         id,
-        orgId,
-      },
-      data: {
-        title,
+        boardId,
+        board: {
+          orgId,
+        },
       },
     });
     await createAuditlog({
-      entityTitle: board.title,
-      entityType: ENTITY_TYPE.BOARD,
-      entityId: board.id,
-      action: ACTION.UPDATE,
+      entityTitle: list.title,
+      entityType: ENTITY_TYPE.LIST,
+      entityId: list.id,
+      action: ACTION.DELETE,
     });
   } catch (error) {
     return {
-      error: "Failed to update",
+      error: "Failed to create",
     };
   }
-  revalidatePath(`/board/${id}`);
-  return { data: board };
+  revalidatePath(`/board/${boardId}`);
+  return { data: list };
 };
-export const updateBoard = createSafeAction(UpdateBoard, handler);
+export const deleteList = createSafeAction(DeleteList, handler);
