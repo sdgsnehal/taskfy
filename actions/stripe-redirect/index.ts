@@ -1,64 +1,71 @@
 "use server";
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { createSafeAction } from "@/lib/create-safe-action";
-import { CopyCard } from "./schema";
+import { StripeRedirect } from "./schema";
 import { InputType, ReturnType } from "./types";
 import { title } from "process";
 import { createAuditlog } from "@/lib/create-audit-log";
 import { ACTION, ENTITY_TYPE } from "@prisma/client";
 const handler = async (data: InputType): Promise<ReturnType> => {
   const { userId, orgId } = auth();
-  if (!userId || !orgId) {
+  const user = await currentUser();
+  if (!userId || !orgId || !user) {
     return {
       error: "Unauthorized",
     };
   }
-  const { id, boardId } = data;
-  let card;
+  const settingsUrl = absoluteUrl(`/organiztion/${orgId}`);
+  let url = "";
   try {
-    const cardToCopy = await db.card.findUnique({
+    const orgSubscription = await db.OrgSubscription.findUnique({
       where: {
-        id,
-        list: {
-          board: {
-            orgId,
+        orgId,
+      },
+    });
+    if (orgSubscription && orgSubscription.stripeCustomerId) {
+      const stripeSession = await stripe.billingPortal.sessions.create({
+        customer: orgSubscription.stripeCustomerId,
+        return_url: settingsUrl,
+      });
+      url = stripeSession.url;
+    } else {
+      const stripeSession = await stripe.checkout.sessions.create({
+        success_url: settingsUrl,
+        cancel_url: settingsUrl,
+        payment_method_types: ["card"],
+        mode: "subscription",
+        billing_address_collection: "auto",
+        customer_email: user.emailAddresses[0].emailAddresses,
+        line_items: [
+          {
+            price_data: {
+              currency: "USD",
+              product_data: {
+                name: "Taskify Pro",
+                description: "Unlimited boards for your organization",
+              },
+              unit_amount: 2000,
+              recurring: {
+                interval: "month",
+              },
+            },
+            quantity: 1,
           },
+        ],
+        metadata: {
+          orgId,
         },
-      },
-    });
-    if (!cardToCopy) {
-      return { error: "Card not found" };
+      });
+      url = stripeSession.url || "";
     }
-    const lastCard = await db.card.findFirst({
-      where: {
-        listId: cardToCopy.listId,
-      },
-      orderBy: { order: "desc" },
-      select: { order: true },
-    });
-    const newOrder = lastCard ? lastCard.order + 1 : 1;
-    card = await db.card.create({
-      data: {
-        title: `${cardToCopy.title} - Copy`,
-        description: cardToCopy.description,
-        order: newOrder,
-        listId: cardToCopy.listId,
-      },
-    });
-    await createAuditlog({
-      entityTitle: card.title,
-      entityType: ENTITY_TYPE.CARD,
-      entityId: card.id,
-      action: ACTION.CREATE,
-    });
-  } catch (error) {
+  } catch {
     return {
-      error: "Failed to copy",
+      error: "Something went wrong",
     };
   }
-  revalidatePath(`/board/${boardId}`);
-  return { data: card };
+  revalidatePath(`/organiztion/${orgId}`);
+  return { data: url };
 };
-export const copyCard = createSafeAction(CopyCard, handler);
+export const stripeRedirect = createSafeAction(StripeRedirect, handler);
