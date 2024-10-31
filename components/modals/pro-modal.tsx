@@ -5,6 +5,8 @@ import { Dialog, DialogContent } from "../ui/dialog";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useAction } from "@/hooks/use-action";
+import { stripeRedirect } from "@/actions/stripe-redirect";
 
 export const ProModal = () => {
   const proModal = useProModal();
@@ -16,6 +18,9 @@ export const ProModal = () => {
       toast.error(error);
     },
   });
+  const onClick = () => {
+    execute({});
+  };
   return (
     <Dialog open={proModal.isOpen} onOpenChange={proModal.onClose}>
       <DialogContent className="max-w-md p-0 overflow-hidden">
@@ -37,7 +42,12 @@ export const ProModal = () => {
               <li>Add more!</li>
             </ul>
           </div>
-          <Button className="w-full" variant="primary">
+          <Button
+            disabled={isLoading}
+            onClick={onClick}
+            className="w-full"
+            variant="primary"
+          >
             Upgrade
           </Button>
         </div>

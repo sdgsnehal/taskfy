@@ -8,6 +8,8 @@ import { InputType, ReturnType } from "./types";
 import { title } from "process";
 import { createAuditlog } from "@/lib/create-audit-log";
 import { ACTION, ENTITY_TYPE } from "@prisma/client";
+import { absoluteUrl } from "@/lib/utils";
+import { stripe } from "@/lib/stripe";
 const handler = async (data: InputType): Promise<ReturnType> => {
   const { userId, orgId } = auth();
   const user = await currentUser();
@@ -19,7 +21,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
   const settingsUrl = absoluteUrl(`/organiztion/${orgId}`);
   let url = "";
   try {
-    const orgSubscription = await db.OrgSubscription.findUnique({
+    const orgSubscription = await db.orgSubscription.findUnique({
       where: {
         orgId,
       },
@@ -37,7 +39,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
         payment_method_types: ["card"],
         mode: "subscription",
         billing_address_collection: "auto",
-        customer_email: user.emailAddresses[0].emailAddresses,
+        customer_email: user.emailAddresses[0].emailAddress,
         line_items: [
           {
             price_data: {
