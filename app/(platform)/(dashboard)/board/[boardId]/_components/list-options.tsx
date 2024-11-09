@@ -10,12 +10,38 @@ import { Button } from "@/components/ui/button";
 import { MoreHorizontal, X } from "lucide-react";
 import { FormSubmit } from "@/components/form/form-submit";
 import { Separator } from "@/components/ui/separator";
+import { deleteList } from "@/actions/delete-list";
+import { useAction } from "@/hooks/use-action";
+import { toast } from "sonner";
+import { copyList } from "@/actions/copy-list";
 
 interface ListOptionsProps {
   data: List;
   onAddCard: () => void;
 }
 export const ListOptions = ({ data, onAddCard }: ListOptionsProps) => {
+  const { execute: executeDeleteList } = useAction(deleteList, {
+    onSuccess: (data) => {
+      toast.success(`List "${data.title}" deleted`);
+    },
+    onError: () => {
+      toast.error("Unable to delete the list");
+    },
+  });
+  const { execute: executeCopyList } = useAction(copyList, {
+    onSuccess: (data) => {
+      toast.success(`List "${data.title}" copy created`);
+    },
+    onError: () => {
+      toast.error("Unable to copy the list");
+    },
+  });
+  const onDeleteList = () => {
+    executeDeleteList({ id: data.id, boardId: data.boardId });
+  };
+  const onCopyList = () => {
+    executeCopyList({ id: data.id, boardId: data.boardId });
+  };
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -42,7 +68,7 @@ export const ListOptions = ({ data, onAddCard }: ListOptionsProps) => {
         >
           Add Card...
         </Button>
-        <form>
+        <form action={onCopyList}>
           <input hidden name="id" id="id" value={data.id}></input>
           <input
             hidden
@@ -58,7 +84,7 @@ export const ListOptions = ({ data, onAddCard }: ListOptionsProps) => {
           </FormSubmit>
         </form>
         <Separator />
-        <form>
+        <form action={onDeleteList}>
           <input hidden name="id" id="id" value={data.id}></input>
           <input
             hidden
